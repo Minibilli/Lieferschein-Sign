@@ -8,8 +8,9 @@ Ablauf in der App:
 5. **Speichern**: Die Unterschrift wird als Vektorgrafik in die PDF geschrieben und die **Originaldatei überschrieben**.
 
 ## APK über GitHub (ohne Android Studio)
-Bei jedem Push auf `main` baut GitHub Actions die App automatisch:
-**Actions** → letzter Lauf „APK bauen“ → unten bei *Artifacts* **Lieferschein-Sign-APK** herunterladen → entpacken → APK auf dem Tablet installieren (Installation aus unbekannten Quellen erlauben).
+Bei jedem Push auf `main` baut GitHub Actions die App automatisch und veröffentlicht sie als Release.
+**Direkter Download der neuesten Version:** https://github.com/Minibilli/Lieferschein-Sign/releases/latest → `Lieferschein-Sign.apk` antippen → installieren (Installation aus unbekannten Quellen einmalig erlauben).
+Neue Versionen lassen sich einfach drüber installieren (fester Signaturschlüssel `app/debug.keystore`).
 Ein Build lässt sich auch von Hand starten: Actions → „APK bauen“ → *Run workflow*.
 
 ## Bauen (Android Studio)
