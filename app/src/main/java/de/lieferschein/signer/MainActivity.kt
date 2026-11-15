@@ -156,8 +156,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val etHost = field("Server", "IP-Adresse, z. B. 192.168.1.10", cur?.host)
-        val etShare = field("Freigabe", "z. B. Lieferscheine", cur?.share)
-        val etFolder = field("Unterordner (optional)", "z. B. 2026\\Eingang", cur?.folder)
+        val etShare = field("Freigabe (nur der erste Ordner nach der IP)", "z. B. daten", cur?.share)
+        val etFolder = field("Unterordner (optional, mehrere Ebenen mit \\)", "z. B. bbm\\2024", cur?.folder)
         val etUser = field("Benutzer", "leer lassen für Gastzugang", cur?.user)
         val etPass = field("Passwort", "", cur?.password, password = true)
         val etDomain = field("Domäne / Arbeitsgruppe (optional)", "z. B. FIRMA", cur?.domain)
@@ -186,6 +186,16 @@ class MainActivity : AppCompatActivity() {
                 var folder = SmbStorage.normalizeFolder(etFolder.text.toString())
                 if (parts.size >= 2 && share.isEmpty()) share = parts[1]
                 if (parts.size >= 3 && folder.isEmpty()) folder = parts.drop(2).joinToString("\\")
+
+                // "daten\bbm" bei Freigabe: Freigabe = "daten", Rest wandert vor den Unterordner
+                val shareParts = share.replace('/', '\\').split('\\').filter { it.isNotBlank() }
+                if (shareParts.size > 1) {
+                    share = shareParts[0]
+                    folder = (shareParts.drop(1) + listOf(folder).filter { it.isNotEmpty() })
+                        .joinToString("\\")
+                    etShare.setText(share)
+                    etFolder.setText(folder)
+                }
 
                 if (host.isEmpty() || share.isEmpty()) {
                     tvInfo.text = "Bitte Server und Freigabe angeben."
