@@ -68,5 +68,4 @@ dependencies {
 
     // Netzlaufwerke (SMB2/SMB3: Windows-Freigaben, NAS)
     implementation("com.hierynomus:smbj:0.13.0")
-    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
 }
