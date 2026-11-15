@@ -6,8 +6,7 @@ import android.provider.DocumentsContract
 import android.provider.DocumentsContract.Document
 
 /**
- * Durchsucht den gewählten Ordner inkl. aller Unterordner nach PDF-Dateien,
- * deren Dateiname die gescannte Nummer enthält.
+ * Suche nach PDF-Dateien, deren Dateiname die gescannte Nummer enthält.
  *
  * Treffer-Regel: Die Nummer muss im Dateinamen vorkommen und darf nicht direkt
  * von weiteren Ziffern umgeben sein (Suche "4711" findet "LS_4711.pdf" und
@@ -15,13 +14,28 @@ import android.provider.DocumentsContract.Document
  */
 object FileSearch {
 
-    data class Hit(val uri: Uri, val name: String, val path: String, val exact: Boolean)
+    /** ref = content://-URI (lokal) oder "smb:" + Pfad in der Freigabe (Netzlaufwerk) */
+    data class Hit(val ref: String, val name: String, val path: String, val exact: Boolean)
 
-    fun search(context: Context, treeUri: Uri, number: String): List<Hit> {
-        val needle = number.trim()
-        if (needle.isEmpty()) return emptyList()
-        val pattern = Regex("(?<!\\d)" + Regex.escape(needle) + "(?!\\d)", RegexOption.IGNORE_CASE)
+    class Matcher(number: String) {
+        private val needle = number.trim()
+        private val pattern = Regex("(?<!\\d)" + Regex.escape(needle) + "(?!\\d)", RegexOption.IGNORE_CASE)
 
+        /** null = kein Treffer, sonst true bei exaktem Treffer */
+        fun match(fileName: String): Boolean? {
+            if (!fileName.endsWith(".pdf", ignoreCase = true)) return null
+            val base = fileName.substringBeforeLast('.')
+            if (!pattern.containsMatchIn(base)) return null
+            return base.equals(needle, ignoreCase = true)
+        }
+    }
+
+    fun sort(hits: List<Hit>) =
+        hits.sortedWith(compareByDescending<Hit> { it.exact }.thenBy { it.path.lowercase() })
+
+    /** Lokale Ordner, SD-Karte, USB (Storage Access Framework) */
+    fun searchLocal(context: Context, treeUri: Uri, number: String): List<Hit> {
+        val matcher = Matcher(number)
         val resolver = context.contentResolver
         val rootId = DocumentsContract.getTreeDocumentId(treeUri)
         val hits = mutableListOf<Hit>()
@@ -44,22 +58,20 @@ object FileSearch {
                     val mime = c.getString(2)
                     if (mime == Document.MIME_TYPE_DIR) {
                         stack.addLast(id to "$path/$name")
-                    } else if (name.endsWith(".pdf", ignoreCase = true) || mime == "application/pdf") {
-                        val base = name.substringBeforeLast('.')
-                        if (pattern.containsMatchIn(base)) {
-                            hits.add(
-                                Hit(
-                                    uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id),
-                                    name = name,
-                                    path = "$path/$name",
-                                    exact = base.equals(needle, ignoreCase = true)
-                                )
+                    } else {
+                        val exact = matcher.match(name) ?: continue
+                        hits.add(
+                            Hit(
+                                ref = DocumentsContract.buildDocumentUriUsingTree(treeUri, id).toString(),
+                                name = name,
+                                path = "$path/$name",
+                                exact = exact
                             )
-                        }
+                        )
                     }
                 }
             }
         }
-        return hits.sortedWith(compareByDescending<Hit> { it.exact }.thenBy { it.path.lowercase() })
+        return sort(hits)
     }
 }

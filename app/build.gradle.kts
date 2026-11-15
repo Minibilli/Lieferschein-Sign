@@ -38,6 +38,18 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    packaging {
+        resources {
+            excludes += setOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE*",
+                "META-INF/NOTICE*",
+                "META-INF/INDEX.LIST",
+                "META-INF/versions/**"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -53,4 +65,8 @@ dependencies {
 
     // PDF bearbeiten (Unterschrift als Vektorgrafik einfügen)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+
+    // Netzlaufwerke (SMB2/SMB3: Windows-Freigaben, NAS)
+    implementation("com.hierynomus:smbj:0.13.0")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
 }

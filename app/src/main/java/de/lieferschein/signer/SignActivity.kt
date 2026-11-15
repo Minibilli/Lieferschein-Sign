@@ -3,7 +3,6 @@ package de.lieferschein.signer
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
-import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.widget.Button
@@ -19,20 +18,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 import kotlin.math.max
 import kotlin.math.min
 
 class SignActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_URI = "uri"
+        const val EXTRA_REF = "ref"
         const val EXTRA_NAME = "name"
         private const val KEY_STYLUS_ONLY = "stylus_only"
         private const val MAX_BITMAP_SIDE = 3000
     }
 
-    private lateinit var docUri: Uri
+    private lateinit var docRef: String
     private lateinit var workFile: File
     private lateinit var canvas: SignatureCanvasView
     private lateinit var tvPage: TextView
@@ -51,7 +49,7 @@ class SignActivity : AppCompatActivity() {
         setContentView(R.layout.activity_sign)
         title = "Unterschreiben"
 
-        docUri = Uri.parse(intent.getStringExtra(EXTRA_URI))
+        docRef = intent.getStringExtra(EXTRA_REF) ?: run { finish(); return }
         workFile = File(cacheDir, "work.pdf")
 
         canvas = findViewById(R.id.canvas)
@@ -89,9 +87,7 @@ class SignActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    val input = contentResolver.openInputStream(docUri)
-                        ?: throw IOException("Datei kann nicht geöffnet werden")
-                    input.use { inp -> workFile.outputStream().use { inp.copyTo(it) } }
+                    Storage.download(this@SignActivity, docRef, workFile)
                 }
                 pfd = ParcelFileDescriptor.open(workFile, ParcelFileDescriptor.MODE_READ_ONLY)
                 renderer = PdfRenderer(pfd!!)
@@ -150,7 +146,7 @@ class SignActivity : AppCompatActivity() {
                 withContext(Dispatchers.IO) {
                     val signed = File(cacheDir, "signed.pdf")
                     PdfSigner.sign(workFile, snapshot, signed)
-                    overwriteOriginal(signed)
+                    Storage.overwrite(this@SignActivity, docRef, signed)
                     signed.delete()
                 }
                 Toast.makeText(this@SignActivity, "Gespeichert", Toast.LENGTH_SHORT).show()
@@ -167,18 +163,6 @@ class SignActivity : AppCompatActivity() {
                     .show()
             }
         }
-    }
-
-    /** Überschreibt die geladene Datei. "rwt" = schreiben + vorher kürzen. */
-    private fun overwriteOriginal(signed: File) {
-        val out = try {
-            contentResolver.openOutputStream(docUri, "rwt")
-        } catch (e: Exception) {
-            null
-        } ?: contentResolver.openOutputStream(docUri, "wt")
-        ?: throw IOException("Datei kann nicht zum Schreiben geöffnet werden")
-
-        out.use { os -> signed.inputStream().use { it.copyTo(os) } }
     }
 
     private fun confirmLeave() {

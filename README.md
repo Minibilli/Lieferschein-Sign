@@ -25,7 +25,7 @@ Hinweis: Die Datei `gradle-wrapper.jar` liegt nicht bei. Android Studio kommt oh
 - **Google-Play-Dienste** müssen auf dem Tablet vorhanden sein (für den Scanner). Eine Kamera-Berechtigung braucht die App nicht.
 - **„Nur Stift“** (Standard: an): Nur der Stift zeichnet, Finger und Handballen werden ignoriert. Wenn dein Stift nicht als Stift erkannt wird (z. B. bei einfachen kapazitiven Stiften), schalte die Option aus.
 - **Suchregel:** Die Nummer muss im Dateinamen vorkommen und darf nicht direkt an weitere Ziffern grenzen. Die Suche nach `4711` findet also `LS_4711.pdf` und `4711 Müller.pdf`, aber nicht `47110.pdf`. Ein exakter Treffer (`4711.pdf`) steht immer oben.
-- **Netzlaufwerke:** Funktioniert mit allem, was in der Android-Dateiauswahl als Ordner erscheint (interner Speicher, SD-Karte, USB). Für SMB-/NAS-Freigaben brauchst du eine App, die die Freigabe als Dokumentanbieter einbindet (z. B. „CIFS Documents Provider“).
+- **Netzlaufwerke:** In der Ordnerauswahl „Netzlaufwerk (Windows-Freigabe / NAS)“ wählen und Server (am besten die IP-Adresse), Freigabe, optional Unterordner, Benutzer und Passwort eintragen. Die App prüft die Verbindung sofort. Unterstützt werden SMB2 und SMB3, SMB1 nicht. Die Zugangsdaten liegen nur im privaten App-Speicher des Tablets.
 - Zuerst wird die unterschriebene PDF komplett im App-Cache erzeugt und erst danach über das Original geschrieben. So bleibt das Original erhalten, wenn beim Erzeugen etwas schiefgeht.
 
 ## Aufbau
