@@ -69,3 +69,8 @@ dependencies {
     // Netzlaufwerke (SMB2/SMB3: Windows-Freigaben, NAS)
     implementation("com.hierynomus:smbj:0.13.0")
 }
+
+// pdfbox-android und smbj bringen BouncyCastle in zwei Varianten mit – nur eine behalten
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+}
